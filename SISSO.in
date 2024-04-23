@@ -1,0 +1,54 @@
+!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+! Keywords for the target properties
+!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+ptype=1              ! Property type 1: continuous for regression,2:categorical for classification
+ntask=1              ! Number of tasks (properties or maps, see J. Phys.: Mater. 2, 024002 (2019)) 
+                     ! 1: single-task learning, >1: multi-task learning
+task_weighting=1     ! 1: no weighting (tasks treated equally regardless of samples for each task) 
+                     ! 2: each task weighted by #sample_task_i/total_sample when calculating the total error.
+nsample=64          ! Number of samples. If ntask>1, specify the size for each task e.g.: xxx,xxx,...
+desc_dim=3           ! Dimension of the descriptor, a hyperparameter
+restart=.false.      ! Set .true. to continue an interrupted job (progress recorded in the file CONTINUE)
+
+!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+! Keywords for feature construction (FC) and sure independence screening (SIS)
+! FC recursively do H*Phi->Phi, where H: operators set, Phi: feature space. Number of repeat: rung of the Phi.
+! Implemented operators:(+)(-)(*)(/)(exp)(exp-)(^-1)(^2)(^3)(sqrt)(cbrt)(log)(|-|)(scd)(^6)(sin)(cos)
+! scd: standard Cauchy distribution
+!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+nsf= 14               ! Number of scalar features provided in the file train.dat
+rung=1               ! Level of the feature space to be constructed; higher of which, higher complexity of features
+                     ! Usually <=3 limited to available memory.
+opset='(+)(-)(*)(/)(exp)(log)(^-1)(^2)(^3)(sqrt)(cbrt)(|-|)'    ! Operators for recursive FC. In each cycle of recursion, 
+                     ! the operators can be them same (just provide One set here) or different (specify a set for each 
+                     ! cycle e.g.: 'xxx','xxx',...)
+maxcomplexity=7      ! Features with complexity (number of operators in the feature) higher than this value will  
+                     ! not be selected. A feature from rung=1,2,3 has number of operators <=1, <=3, <=7, respectively.
+dimclass=(1:14)  ! For dimension analysis. Primary features with same dimension/unit are specified in one bracket.  
+                     ! (m:n) means from the mth to nth features as provided in train.dat. Those not in any () are taken
+                     ! as dimensionless. Features with different unit are not allowed to combined linearly.
+maxfval_lb=1e-3      ! A feature with the max. abs. value of its elements < maxfval_lb will not be selected (zero-feature)
+maxfval_ub=1e5       ! A feature with the max. abs. value of its elements > maxfval_ub will not be selected (infinity-feature)
+subs_sis=1000         ! SIS-selected subspace size. At each iteration the subspace size can be set the same (one value here),
+                     ! or different (specify the size for each subspace e.g.: xxx,xxx,...). Size limited to memory and speed.
+                     !------------------------------------------------------------------------------------------
+                     ! Below for feature decorrelation. Turn off: decorr_theta=1, decorr_delta=0, decorr_alpha=1
+                     !------------------------------------------------------------------------------------------
+decorr_theta=1    ! Decorrelation threshold (<=1). When feat.-feat. corr. > theta, one of the two feat. will be removed.
+decorr_delta=0    ! The score-window for corr. evaluation (>=0). Each feature (with SIS-score s) is checked for corr. with
+                     ! those having score [s,s+delta]. Note: the number of removed features may increase rapidly with delta.
+decorr_alpha=1.0     ! The SIS-selected subspace may be reduced after decorrelation. To ensure an optimal subspace with always
+                     ! the prescribed size 'subs_sis', the volume prior decorr. is enlarged to alpha*subs_sis, with alpha>=1.
+                     ! Note: the greater the alpha, the more memory required.
+
+!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+! Keywords for descriptor identification via a sparsifying operator
+!>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+method='L0'          ! Sparsification operator: 'L0' is recommended for both regression and classification
+                     ! 'L1L0' (for regression only) is a modified LASSO method (LASSO+L0), see PRL 114, 105503 (2015)
+L1L0_size4L0= 1      ! Needed only when 'L1L0' is selected: the number of features to be screened by L1 for L0
+fit_intercept=.true. ! Fit to a nonzero (.true.) or zero (.false.) intercept for the final linear model.
+metric='RMSE'        ! The metric for model selection in regression: RMSE or MaxAE (max absolute error)
+nm_output=100        ! Number of the top models to output (see the folder 'models')
+
+
